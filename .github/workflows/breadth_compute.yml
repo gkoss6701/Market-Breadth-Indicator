@@ -6,6 +6,9 @@ on:
     types: [completed]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   compute:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
@@ -28,6 +31,6 @@ jobs:
         run: |
           git config user.name "breadth-bot"
           git config user.email "breadth-bot@users.noreply.github.com"
-          git add data/breadth.db
+          git add -f data/breadth.db
           git commit -m "Breadth compute $(date -u +%Y-%m-%d)" || echo "No changes"
           git push
