@@ -51,6 +51,27 @@ def upsert_breadth_daily(row: dict) -> None:
         )
 
 
+def upsert_breadth_daily_bulk(df: pd.DataFrame) -> None:
+    """Upsert many breadth_daily rows at once (full recomputed history),
+    rather than one row per call. Used so the dashboard's time-series
+    charts have data -- writing only 'today's' row on every run leaves
+    breadth_daily with as few rows as the number of times the job has
+    run, which looks like an empty chart even once metrics exist.
+    df columns must match breadth_daily's schema (date, pct_above_20ma,
+    pct_above_50ma, pct_above_200ma, ad_line, new_highs, new_lows,
+    up_down_vol_ratio, composite_score, regime, bearish_divergence,
+    bullish_divergence).
+    """
+    with get_connection() as conn:
+        df.to_sql("breadth_daily_staging", conn, if_exists="replace", index=False)
+        cols = ", ".join(df.columns)
+        conn.execute(
+            f"INSERT OR REPLACE INTO breadth_daily ({cols}) "
+            f"SELECT {cols} FROM breadth_daily_staging"
+        )
+        conn.execute("DROP TABLE breadth_daily_staging")
+
+
 def get_latest_breadth(n_days: int = 30) -> pd.DataFrame:
     with get_connection() as conn:
         return pd.read_sql(
