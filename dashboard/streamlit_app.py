@@ -38,9 +38,22 @@ col4.metric("New Highs / Lows", f"{int(latest['new_highs'])} / {int(latest['new_
 st.subheader("Composite Score Over Time")
 st.line_chart(breadth.set_index("date")["composite_score"])
 
-st.subheader("Component Metrics")
-st.line_chart(breadth.set_index("date")[["pct_above_50ma", "pct_above_200ma"]])
-st.line_chart(breadth.set_index("date")["ad_line"])
+st.subheader("% of Stocks Above Moving Average")
+pct_ma = breadth.set_index("date")[["pct_above_50ma", "pct_above_200ma"]].rename(
+    columns={"pct_above_50ma": "% Above 50-day MA", "pct_above_200ma": "% Above 200-day MA"}
+)
+st.line_chart(pct_ma)
+
+st.subheader("Advance-Decline Line")
+st.caption("Cumulative advancers minus decliners across the universe.")
+ad_line = breadth.set_index("date")[["ad_line"]].rename(columns={"ad_line": "A/D Line"})
+st.line_chart(ad_line)
+
+st.subheader("New 52-Week Highs vs. Lows")
+nh_nl = breadth.set_index("date")[["new_highs", "new_lows"]].rename(
+    columns={"new_highs": "New Highs", "new_lows": "New Lows"}
+)
+st.line_chart(nh_nl)
 
 st.subheader("Recent Alerts")
 st.dataframe(alerts, use_container_width=True)
